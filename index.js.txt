@@ -1,0 +1,73 @@
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const { OpenAI } = require("openai");
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+app.get("/", (req, res) => {
+  res.send("CreativeOS AI Backend Running");
+});
+
+app.post("/generate", async (req, res) => {
+  try {
+    const { company, industry, audience, goal, budget } = req.body;
+
+    const prompt = `
+You are CreativeOS AI, a premium AI Creative Operating System for marketing agencies.
+
+Generate a COMPLETE creative campaign system for:
+
+Company Name: ${company}
+Industry: ${industry}
+Target Audience: ${audience}
+Campaign Goal: ${goal}
+Budget Tier: ${budget}
+
+Include:
+1. Campaign Strategy
+2. Content Pillars
+3. Instagram Captions
+4. AI Image Prompts
+5. Short-form Video Scripts
+6. Pricing for Small, Medium, Large agencies
+7. Monthly & Annual pricing
+8. Renewal & Cancellation policy
+9. Standard Terms & Conditions
+
+Tone:
+- Premium
+- Professional
+- Agency-ready
+- No slang
+`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 2500,
+      temperature: 0.7
+    });
+
+    res.json({
+      success: true,
+      result: response.choices[0].message.content
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "AI generation failed"
+    });
+  }
+});
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
